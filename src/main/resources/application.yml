@@ -9,7 +9,7 @@ spring:
           - Header= token, \d+
           - Header= Content-Type, application/json
           - Method=GET, POST
-          - Query=color 
+          - Query=color
           - Cookie=color, rojo
         filters:
           - StripPrefix=2
