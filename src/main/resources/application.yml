@@ -6,6 +6,11 @@ spring:
         uri: lb://servicio-productos
         predicates: #los predicates son reglas del request que deven cumplirse si o si
           - Path=/api/productos/**
+          - Header= token, \d+
+          - Header= Content-Type, application/json
+          - Method=GET, POST
+          - Query=color
+          - Cookie=color, rojo
         filters:
           - StripPrefix=2
           - EjemploCookie=Hola mi mensaje personalizado, usuario, GamalielAbanto
