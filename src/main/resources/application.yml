@@ -1,3 +1,26 @@
+#Fuente Spring Cloud Circuit Breaker: https://docs.spring.io/spring-cloud-circuitbreaker/docs/current/reference/html/
+#Configuracion de resilience4j con yml, -> Configuracion yml predomina del appConfig
+resilience4j:
+  circuitbreaker:
+    configs:
+      defecto:
+        sliding-window-size: 6 #tamaño de la ventana deslizante, indica que si el 80% de las solicitudes de 6 (es decir, 4) fallan, abra el circuito.
+        failure-rate-threshold: 50 #taza de porcentaje 50%
+        wait-duration-in-open-state: 20s #tiempo de espera -- no permite mas llamdas durante 20 segundos
+        permitted-number-of-calls-in-half-open-state: 4 #cantidad de calls en estado semiabierto
+        slow-call-rate-threshold: 50 #
+        slow-call-duration-threshold: 2s #tiempo de la llamada
+    instances:
+      productos:
+        base-config: defecto
+  timelimiter:
+    configs:
+      defecto:
+        timeout-duration: 2s # tiempo maximo de espera en responder el microservicio
+    instances:
+      productos:
+        base-config: defecto
+
 spring:
   cloud:
     gateway:
@@ -6,12 +29,19 @@ spring:
         uri: lb://servicio-productos
         predicates: #los predicates son reglas del request que deven cumplirse si o si
           - Path=/api/productos/**
-          - Header= token, \d+
-          - Header= Content-Type, application/json
-          - Method=GET, POST
-          - Query=color
-          - Cookie=color, rojo
+          #- Header= token, \d+
+          #- Header= Content-Type, application/json
+          #- Method=GET, POST
+          #- Query=color
+          #- Cookie=color, rojo
+
+          # Ejmemplo: http://localhost:8090/api/productos/api/listar/2?color=verde
         filters:
+          - name: CircuitBreaker
+            args:
+              name: productos
+              statusCodes: 500, 404
+              fallbackUri: forward:/api/items/api/listar/9/cantidad/4
           - StripPrefix=2
           - EjemploCookie=Hola mi mensaje personalizado, usuario, GamalielAbanto
           # - name: Ejemplo
@@ -28,5 +58,5 @@ spring:
           - StripPrefix=2
           - AddRequestHeader=token-request, 123456
           - AddResponseHeader=token-response, 12345678
-          - SetResponseHeader=Content-Type, text/plain
+          - SetResponseHeader=Content-Type, application/json #text/plain
           - AddRequestParameter=nombre, andres
